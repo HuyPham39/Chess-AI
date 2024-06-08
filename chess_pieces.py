@@ -42,6 +42,7 @@ class ChessPiece:
         self.board = board
         self.main_window = main_window
         self.squares = squares
+        self.first_move = True
         self.widget = tk.Label(main_window, image= type_dict[type], 
                           width= 96, height= 96, border= False)
         self.canvas = board.create_window(18 + self.position[0] * 96, 8 + self.position[1] * 96, anchor='nw', 
@@ -62,12 +63,12 @@ class ChessPiece:
 
     def potential_move(self):
         potential_moves = []
-        i = 1
         if self.type == 'black-pawn':
             if self.squares[self.position[0]] [self.position[1] + 1] == []:
                 potential_moves.append((self.position[0], self.position[1] + 1))
-                if (self.position[1] == 1) and (self.squares[self.position[0]] [self.position[1] + 2] == []):
+                if (self.first_move == True) and (self.squares[self.position[0]] [self.position[1] + 2] == []):
                     potential_moves.append((self.position[0], self.position[1] + 2))
+                    self.first_move = False
             if ((self.position[0] + 1) < 8 and self.position[1] + 1 < 8) and self.squares[self.position[0] + 1] [self.position[1] + 1] != []:
                 if "black" not in self.squares[self.position[0] + 1] [self.position[1] + 1].type:
                     potential_moves.append((self.position[0] + 1, self.position[1] + 1))
@@ -78,8 +79,9 @@ class ChessPiece:
         if self.type == 'white-pawn':
             if self.squares[self.position[0]] [self.position[1] - 1] == []:
                 potential_moves.append((self.position[0], self.position[1] - 1))
-                if (self.position[1] == 6) and (self.squares[self.position[0]] [self.position[1] - 2] == []):
+                if (self.first_move == True) and (self.squares[self.position[0]] [self.position[1] - 2] == []):
                     potential_moves.append((self.position[0], self.position[1] - 2))
+                    self.first_move = False
             if ((self.position[0] + 1) < 8 and self.position[1] - 1 >= 0) and self.squares[self.position[0] + 1] [self.position[1] - 1] != []:
                 if "white" not in self.squares[self.position[0] + 1] [self.position[1] - 1].type:
                     potential_moves.append((self.position[0] + 1, self.position[1] - 1))
@@ -88,11 +90,9 @@ class ChessPiece:
                     potential_moves.append((self.position[0] - 1, self.position[1] - 1))
 
         if self.type == 'black-rook':
-            basis_vector = [0,1]
+            basis_vector = (0,1)
             for j in range(4):
-                change_in_pos = []
-                change_in_pos.append(basis_vector[0])
-                change_in_pos.append(basis_vector[1])
+                change_in_pos = [basis_vector[0], basis_vector[1]]
                 while ((0 <= self.position[0] + change_in_pos[0] < 8) and (0 <= self.position[1] + change_in_pos[1] < 8) and 
                        (self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]] == [])):
                     potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
@@ -101,18 +101,12 @@ class ChessPiece:
                 if (((0 <= self.position[0] + change_in_pos[0] < 8) and (0 <= self.position[1] + change_in_pos[1] < 8)) and 
                     ("black" not in self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]].type)):
                     potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
-                temp = []
-                temp.append(basis_vector[0])
-                temp.append(basis_vector[1])
-                basis_vector[0] = -temp[1]
-                basis_vector[1] = temp[0]
+                basis_vector = (-basis_vector[1], basis_vector[0])
 
         if self.type == 'white-rook':
             basis_vector = [0,1]
             for j in range(4):
-                change_in_pos = []
-                change_in_pos.append(basis_vector[0])
-                change_in_pos.append(basis_vector[1])
+                change_in_pos = [basis_vector[0], basis_vector[1]]
                 while ((0 <= self.position[0] + change_in_pos[0] < 8) and (0 <= self.position[1] + change_in_pos[1] < 8) and 
                        (self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]] == [])):
                     potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
@@ -121,70 +115,48 @@ class ChessPiece:
                 if (((0 <= self.position[0] + change_in_pos[0] < 8) and (0 <= self.position[1] + change_in_pos[1] < 8)) and 
                     ("white" not in self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]].type)):
                     potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
-                temp = []
-                temp.append(basis_vector[0])
-                temp.append(basis_vector[1])
-                basis_vector[0] = -temp[1]
-                basis_vector[1] = temp[0]
+                basis_vector = (-basis_vector[1], basis_vector[0])
 
         if self.type == 'black-knight':
-            change_in_pos = [1,2]
+            basis_vector = (1,2)
             for i in range(4):
-                if (0 <= self.position[0] + change_in_pos[0] < 8) and (0 <= self.position[1] + change_in_pos[1] < 8):
-                    if (self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]] == []):
-                        potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
-                    elif ("black" not in self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]].type):
-                        potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
-                temp = []
-                temp.append(change_in_pos[0])
-                temp.append(change_in_pos[1])
-                change_in_pos[0] = -temp[1]
-                change_in_pos[1] = temp[0]
-            change_in_pos = [2,1]
+                if (0 <= self.position[0] + basis_vector[0] < 8) and (0 <= self.position[1] + basis_vector[1] < 8):
+                    if (self.squares[self.position[0] + basis_vector[0]] [self.position[1] + basis_vector[1]] == []):
+                        potential_moves.append((self.position[0] + basis_vector[0], self.position[1] + basis_vector[1]))
+                    elif ("black" not in self.squares[self.position[0] + basis_vector[0]] [self.position[1] + basis_vector[1]].type):
+                        potential_moves.append((self.position[0] + basis_vector[0], self.position[1] + basis_vector[1]))
+                basis_vector = (-basis_vector[1], basis_vector[0])
+            basis_vector = (2,1)
             for i in range(4):
-                if (0 <= self.position[0] + change_in_pos[0] < 8) and (0 <= self.position[1] + change_in_pos[1] < 8):
-                    if (self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]] == []):
-                        potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
-                    elif ("black" not in self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]].type):
-                        potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
-                temp = []
-                temp.append(change_in_pos[0])
-                temp.append(change_in_pos[1])
-                change_in_pos[0] = -temp[1]
-                change_in_pos[1] = temp[0]
+                if (0 <= self.position[0] + basis_vector[0] < 8) and (0 <= self.position[1] + basis_vector[1] < 8):
+                    if (self.squares[self.position[0] + basis_vector[0]] [self.position[1] + basis_vector[1]] == []):
+                        potential_moves.append((self.position[0] + basis_vector[0], self.position[1] + basis_vector[1]))
+                    elif ("black" not in self.squares[self.position[0] + basis_vector[0]] [self.position[1] + basis_vector[1]].type):
+                        potential_moves.append((self.position[0] + basis_vector[0], self.position[1] + basis_vector[1]))
+                basis_vector = (-basis_vector[1], basis_vector[0])
 
         if self.type == 'white-knight':
-            change_in_pos = [1,2]
+            basis_vector = (1,2)
             for i in range(4):
-                if (0 <= self.position[0] + change_in_pos[0] < 8) and (0 <= self.position[1] + change_in_pos[1] < 8):
-                    if (self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]] == []):
-                        potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
-                    elif ("white" not in self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]].type):
-                        potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
-                temp = []
-                temp.append(change_in_pos[0])
-                temp.append(change_in_pos[1])
-                change_in_pos[0] = -temp[1]
-                change_in_pos[1] = temp[0]
-            change_in_pos = [2,1]
+                if (0 <= self.position[0] + basis_vector[0] < 8) and (0 <= self.position[1] + basis_vector[1] < 8):
+                    if (self.squares[self.position[0] + basis_vector[0]] [self.position[1] + basis_vector[1]] == []):
+                        potential_moves.append((self.position[0] + basis_vector[0], self.position[1] + basis_vector[1]))
+                    elif ("white" not in self.squares[self.position[0] + basis_vector[0]] [self.position[1] + basis_vector[1]].type):
+                        potential_moves.append((self.position[0] + basis_vector[0], self.position[1] + basis_vector[1]))
+                basis_vector = (-basis_vector[1], basis_vector[0])
+            basis_vector = (2,1)
             for i in range(4):
-                if (0 <= self.position[0] + change_in_pos[0] < 8) and (0 <= self.position[1] + change_in_pos[1] < 8):
-                    if (self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]] == []):
-                        potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
-                    elif ("white" not in self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]].type):
-                        potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
-                temp = []
-                temp.append(change_in_pos[0])
-                temp.append(change_in_pos[1])
-                change_in_pos[0] = -temp[1]
-                change_in_pos[1] = temp[0]
+                if (0 <= self.position[0] + basis_vector[0] < 8) and (0 <= self.position[1] + basis_vector[1] < 8):
+                    if (self.squares[self.position[0] + basis_vector[0]] [self.position[1] + basis_vector[1]] == []):
+                        potential_moves.append((self.position[0] + basis_vector[0], self.position[1] + basis_vector[1]))
+                    elif ("white" not in self.squares[self.position[0] + basis_vector[0]] [self.position[1] + basis_vector[1]].type):
+                        potential_moves.append((self.position[0] + basis_vector[0], self.position[1] + basis_vector[1]))
+                basis_vector = (-basis_vector[1], basis_vector[0])
 
         if self.type == 'black-bishop':
-            basis_vector = [1,1]
+            basis_vector = (1,1)
             for j in range(4):
-                change_in_pos = []
-                change_in_pos.append(basis_vector[0])
-                change_in_pos.append(basis_vector[1])
+                change_in_pos = [basis_vector[0], basis_vector[1]]
                 while ((0 <= self.position[0] + change_in_pos[0] < 8) and (0 <= self.position[1] + change_in_pos[1] < 8) and 
                        (self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]] == [])):
                     potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
@@ -193,18 +165,12 @@ class ChessPiece:
                 if (((0 <= self.position[0] + change_in_pos[0] < 8) and (0 <= self.position[1] + change_in_pos[1] < 8)) and 
                     ("black" not in self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]].type)):
                     potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
-                temp = []
-                temp.append(basis_vector[0])
-                temp.append(basis_vector[1])
-                basis_vector[0] = -temp[1]
-                basis_vector[1] = temp[0]
+                basis_vector = (-basis_vector[1], basis_vector[0])
 
         if self.type == 'white-bishop':
-            basis_vector = [1,1]
+            basis_vector = (1,1)
             for j in range(4):
-                change_in_pos = []
-                change_in_pos.append(basis_vector[0])
-                change_in_pos.append(basis_vector[1])
+                change_in_pos = [basis_vector[0], basis_vector[1]]
                 while ((0 <= self.position[0] + change_in_pos[0] < 8) and (0 <= self.position[1] + change_in_pos[1] < 8) and 
                        (self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]] == [])):
                     potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
@@ -213,18 +179,12 @@ class ChessPiece:
                 if (((0 <= self.position[0] + change_in_pos[0] < 8) and (0 <= self.position[1] + change_in_pos[1] < 8)) and 
                     ("white" not in self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]].type)):
                     potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
-                temp = []
-                temp.append(basis_vector[0])
-                temp.append(basis_vector[1])
-                basis_vector[0] = -temp[1]
-                basis_vector[1] = temp[0]
+                basis_vector = (-basis_vector[1], basis_vector[0])
 
         if self.type == 'black-queen':
-            basis_vector = [0,1]
+            basis_vector = (0,1)
             for j in range(4):
-                change_in_pos = []
-                change_in_pos.append(basis_vector[0])
-                change_in_pos.append(basis_vector[1])
+                change_in_pos = [basis_vector[0], basis_vector[1]]
                 while ((0 <= self.position[0] + change_in_pos[0] < 8) and (0 <= self.position[1] + change_in_pos[1] < 8) and 
                        (self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]] == [])):
                     potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
@@ -233,16 +193,10 @@ class ChessPiece:
                 if (((0 <= self.position[0] + change_in_pos[0] < 8) and (0 <= self.position[1] + change_in_pos[1] < 8)) and 
                     ("black" not in self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]].type)):
                     potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
-                temp = []
-                temp.append(basis_vector[0])
-                temp.append(basis_vector[1])
-                basis_vector[0] = -temp[1]
-                basis_vector[1] = temp[0]
-            basis_vector = [1,1]
+                basis_vector = (-basis_vector[1], basis_vector[0])
+            basis_vector = (1,1)
             for j in range(4):
-                change_in_pos = []
-                change_in_pos.append(basis_vector[0])
-                change_in_pos.append(basis_vector[1])
+                change_in_pos = [basis_vector[0], basis_vector[1]]
                 while ((0 <= self.position[0] + change_in_pos[0] < 8) and (0 <= self.position[1] + change_in_pos[1] < 8) and 
                        (self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]] == [])):
                     potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
@@ -251,18 +205,12 @@ class ChessPiece:
                 if (((0 <= self.position[0] + change_in_pos[0] < 8) and (0 <= self.position[1] + change_in_pos[1] < 8)) and 
                     ("black" not in self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]].type)):
                     potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
-                temp = []
-                temp.append(basis_vector[0])
-                temp.append(basis_vector[1])
-                basis_vector[0] = -temp[1]
-                basis_vector[1] = temp[0]
+                basis_vector = (-basis_vector[1], basis_vector[0])
 
         if self.type == 'white-queen':
-            basis_vector = [0,1]
+            basis_vector = (0,1)
             for j in range(4):
-                change_in_pos = []
-                change_in_pos.append(basis_vector[0])
-                change_in_pos.append(basis_vector[1])
+                change_in_pos = [basis_vector[0], basis_vector[1]]
                 while ((0 <= self.position[0] + change_in_pos[0] < 8) and (0 <= self.position[1] + change_in_pos[1] < 8) and 
                        (self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]] == [])):
                     potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
@@ -271,16 +219,10 @@ class ChessPiece:
                 if (((0 <= self.position[0] + change_in_pos[0] < 8) and (0 <= self.position[1] + change_in_pos[1] < 8)) and 
                     ("white" not in self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]].type)):
                     potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
-                temp = []
-                temp.append(basis_vector[0])
-                temp.append(basis_vector[1])
-                basis_vector[0] = -temp[1]
-                basis_vector[1] = temp[0]
-            basis_vector = [1,1]
+                basis_vector = (-basis_vector[1], basis_vector[0])
+            basis_vector = (1,1)
             for j in range(4):
-                change_in_pos = []
-                change_in_pos.append(basis_vector[0])
-                change_in_pos.append(basis_vector[1])
+                change_in_pos = [basis_vector[0], basis_vector[1]]
                 while ((0 <= self.position[0] + change_in_pos[0] < 8) and (0 <= self.position[1] + change_in_pos[1] < 8) and 
                        (self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]] == [])):
                     potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
@@ -289,14 +231,10 @@ class ChessPiece:
                 if (((0 <= self.position[0] + change_in_pos[0] < 8) and (0 <= self.position[1] + change_in_pos[1] < 8)) and 
                     ("white" not in self.squares[self.position[0] + change_in_pos[0]] [self.position[1] + change_in_pos[1]].type)):
                     potential_moves.append((self.position[0] + change_in_pos[0], self.position[1] + change_in_pos[1]))
-                temp = []
-                temp.append(basis_vector[0])
-                temp.append(basis_vector[1])
-                basis_vector[0] = -temp[1]
-                basis_vector[1] = temp[0]
+                basis_vector = (-basis_vector[1], basis_vector[0])
 
         if self.type == 'black-king':
-            basis_vector = [0,1]
+            basis_vector = (0,1)
             for j in range(4):
                 if ((0 <= self.position[0] + basis_vector[0] < 8) and (0 <= self.position[1] + basis_vector[1] < 8) and 
                        (self.squares[self.position[0] + basis_vector[0]] [self.position[1] + basis_vector[1]] == [])):
@@ -304,12 +242,8 @@ class ChessPiece:
                 elif (((0 <= self.position[0] + basis_vector[0] < 8) and (0 <= self.position[1] + basis_vector[1] < 8)) and 
                       ("black" not in self.squares[self.position[0] + basis_vector[0]] [self.position[1] + basis_vector[1]].type)):
                     potential_moves.append((self.position[0] + basis_vector[0], self.position[1] + basis_vector[1]))
-                temp = []
-                temp.append(basis_vector[0])
-                temp.append(basis_vector[1])
-                basis_vector[0] = -temp[1]
-                basis_vector[1] = temp[0]
-            basis_vector = [1,1]
+                basis_vector = (-basis_vector[1], basis_vector[0])
+            basis_vector = (1,1)
             for j in range(4):
                 if ((0 <= self.position[0] + basis_vector[0] < 8) and (0 <= self.position[1] + basis_vector[1] < 8) and 
                        (self.squares[self.position[0] + basis_vector[0]] [self.position[1] + basis_vector[1]] == [])):
@@ -317,14 +251,10 @@ class ChessPiece:
                 elif (((0 <= self.position[0] + basis_vector[0] < 8) and (0 <= self.position[1] + basis_vector[1] < 8)) and 
                       ("black" not in self.squares[self.position[0] + basis_vector[0]] [self.position[1] + basis_vector[1]].type)):
                     potential_moves.append((self.position[0] + basis_vector[0], self.position[1] + basis_vector[1]))
-                temp = []
-                temp.append(basis_vector[0])
-                temp.append(basis_vector[1])
-                basis_vector[0] = -temp[1]
-                basis_vector[1] = temp[0]
+                basis_vector = (-basis_vector[1], basis_vector[0])
 
         if self.type == 'white-king':
-            basis_vector = [0,1]
+            basis_vector = (0,1)
             for j in range(4):
                 if ((0 <= self.position[0] + basis_vector[0] < 8) and (0 <= self.position[1] + basis_vector[1] < 8) and 
                        (self.squares[self.position[0] + basis_vector[0]] [self.position[1] + basis_vector[1]] == [])):
@@ -332,12 +262,8 @@ class ChessPiece:
                 elif (((0 <= self.position[0] + basis_vector[0] < 8) and (0 <= self.position[1] + basis_vector[1] < 8)) and 
                       ("white" not in self.squares[self.position[0] + basis_vector[0]] [self.position[1] + basis_vector[1]].type)):
                     potential_moves.append((self.position[0] + basis_vector[0], self.position[1] + basis_vector[1]))
-                temp = []
-                temp.append(basis_vector[0])
-                temp.append(basis_vector[1])
-                basis_vector[0] = -temp[1]
-                basis_vector[1] = temp[0]
-            basis_vector = [1,1]
+                basis_vector = (-basis_vector[1], basis_vector[0])
+            basis_vector = (1,1)
             for j in range(4):
                 if ((0 <= self.position[0] + basis_vector[0] < 8) and (0 <= self.position[1] + basis_vector[1] < 8) and 
                        (self.squares[self.position[0] + basis_vector[0]] [self.position[1] + basis_vector[1]] == [])):
@@ -345,11 +271,7 @@ class ChessPiece:
                 elif (((0 <= self.position[0] + basis_vector[0] < 8) and (0 <= self.position[1] + basis_vector[1] < 8)) and 
                       ("white" not in self.squares[self.position[0] + basis_vector[0]] [self.position[1] + basis_vector[1]].type)):
                     potential_moves.append((self.position[0] + basis_vector[0], self.position[1] + basis_vector[1]))
-                temp = []
-                temp.append(basis_vector[0])
-                temp.append(basis_vector[1])
-                basis_vector[0] = -temp[1]
-                basis_vector[1] = temp[0]
+                basis_vector = (-basis_vector[1], basis_vector[0])
         return potential_moves
 
     def piece_picked(self):
