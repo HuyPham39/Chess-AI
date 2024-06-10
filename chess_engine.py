@@ -26,25 +26,81 @@ for collumns in squares:
 # A list linking canvas images to objects
 canvas_objects = {}
 
-# Handles all the chesspieces' movements
+# Handles all the chesspieces' movements as well as the turn-based mechanism
 from chess_pieces import *
 
+legal_move_widgets = {}
+focus = None
+turn = "white"
+
+def clear_legal_move_widgets():
+    global legal_move_widgets, board
+    for canvas_id in legal_move_widgets:
+        board.delete(canvas_id)
+    legal_move_widgets = {}
+
+def piece_picked(chess_piece):
+    global legal_move_widgets, focus, board
+    clear_legal_move_widgets()
+    focus = chess_piece
+    if chess_piece.type[6:] != "king":
+        for legal_move in chess_piece.legal_move():
+            legal_move_canvas_id = board.create_image(legal_move[0] * 96 + 2, legal_move[1] * 96 - 12, anchor='nw', image = legal_move_img)
+            legal_move_widgets[legal_move_canvas_id] = legal_move
+    else:
+        for legal_move in refined_kings_legal_moves(chess_piece):
+            legal_move_canvas_id = board.create_image(legal_move[0] * 96 + 2, legal_move[1] * 96 - 12, anchor='nw', image = legal_move_img)
+            legal_move_widgets[legal_move_canvas_id] = legal_move
+    
+
+def move_chose(legal_move_canvas_id):
+    global focus, squares, legal_move_widgets, turn
+    position = legal_move_widgets[legal_move_canvas_id]
+    if squares[position[0]] [position[1]] != False:
+        squares[position[0]] [position[1]].destroy()
+    focus.move(position)
+    focus = None
+    if turn == "white":
+        turn = "black"
+    else:
+        turn = "white"
+    clear_legal_move_widgets()
+
 def button_clicked(event):
+    global board, canvas_objects, turn
     canvas_ids = board.find_overlapping(event.x, event.y, event.x + 1, event.y + 1)[1:]
     if canvas_ids != ():
-        if canvas_objects[canvas_ids[-1]].type != "potential-move":
-            canvas_objects[canvas_ids[-1]].piece_picked()
-        else:
-            canvas_objects[canvas_ids[-1]].move_chose()
+        if (canvas_ids[-1] in canvas_objects) and (canvas_objects[canvas_ids[-1]].type[:5] == turn):
+            piece_picked(canvas_objects[canvas_ids[-1]])
+        elif focus != None:
+            move_chose(canvas_ids[-1])
     else:
         clear_focus()
 
 def clear_focus():
-    global focus, potential_moves
+    global focus
     focus = None
-    clear_widgets(potential_moves)
+    clear_legal_move_widgets()
 
 board.bind("<Button-1>", button_clicked)
+
+# Refining the king's legal moves
+def is_safe(kings_position):
+    global turn
+    for collumn in range(8):
+        for square in squares[collumn]:
+            if (square != False) and (square.type[:5] != turn):
+                if kings_position in square.legal_move():
+                    return False
+    return True
+
+def refined_kings_legal_moves(king):
+    refined_legal_moves = []
+    for move in king.legal_move():
+        if is_safe(move):
+            refined_legal_moves.append(move)
+    return refined_legal_moves
+                
 
 # Set up the default chess game
 
@@ -70,13 +126,8 @@ def default_game():
     squares[7] [7] = ChessPiece(board, main_window, squares, canvas_objects, 'white-rook', (7,7))
     for i in range(8):
         squares[i] [6] = ChessPiece(board, main_window, squares, canvas_objects, 'white-pawn', (i,6))
+
 default_game()
-
-# Set up a turn-based mechanism for the game
-
-
-# a = squares[0] [1].potential_move(squares)
-# squares[0] [1].move(a[1], squares)
 
 
 main_window.mainloop()
