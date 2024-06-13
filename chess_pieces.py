@@ -3,7 +3,6 @@ from pathlib import Path
 
 script_path = Path(__file__).resolve()
 
-
 black_rook_img = tk.PhotoImage(file = script_path.parent / 'images' / 'black-rook.png')
 black_knight_img = tk.PhotoImage(file = script_path.parent / 'images' / 'black-knight.png')
 black_bishop_img = tk.PhotoImage(file = script_path.parent / 'images' / 'black-bishop.png')
@@ -20,7 +19,7 @@ white_pawn_img = tk.PhotoImage(file = script_path.parent / 'images' / 'white-paw
 legal_move_img =  tk.PhotoImage(file = script_path.parent / 'images' / 'potential-move.png')
 
 class ChessPiece:
-    def __init__(self, board, main_window, squares, canvas_objects, type, position):
+    def __init__(self, board, squares, canvas_objects, type, position):
         type_dict = {'black-rook': black_rook_img, 'black-knight': black_knight_img, 'black-bishop': black_bishop_img, 'black-queen': black_queen_img, 
                      'black-king': black_king_img, 'black-pawn': black_pawn_img,
                      
@@ -30,15 +29,13 @@ class ChessPiece:
         self.type = type
         self.position = position
         self.board = board
-        self.main_window = main_window
         self.squares = squares
         self.canvas_id = board.create_image(self.position[0] * 96 + 2, self.position[1] * 96 - 12, anchor='nw', 
                                           image = type_dict[self.type])
         canvas_objects[self.canvas_id] = self
         self.canvas_objects = canvas_objects
-        if self.type[6:] == "pawn":
-            self.first_move = True
-        elif self.type[6:] == "king":
+        self.first_move = True
+        if self.type[6:] == "king":
             self.status = "Safe"
 
 
@@ -52,8 +49,7 @@ class ChessPiece:
         self.board.move(self.canvas_id, (new_position[0] - self.position[0]) * 96, (new_position[1] - self.position[1]) * 96)
         self.position = (new_position[0], new_position[1])
         self.squares[new_position[0]] [new_position[1]] = self
-        if self.type[6:] == "pawn":
-            self.first_move = False
+        self.first_move = False
 
     def legal_move(self):
         legal_moves = []

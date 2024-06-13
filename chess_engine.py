@@ -4,7 +4,7 @@ import tkinter as tk
 main_window = tk.Tk()
 
 # Set the parameters for the window
-SCALE = 0.9
+SCALE = .8
 main_window.geometry(f'{int((SCALE * main_window.winfo_screenwidth()) // 1)}x{(int(SCALE * main_window.winfo_screenheight()) // 1)}')
 main_window.title('Cờ vua siêu trí tuệ, BIG BRAIN')
 
@@ -30,6 +30,7 @@ canvas_objects = {}
 from chess_pieces import *
 
 legal_move_widgets = {}
+castling_move_widgets = {}
 focus = None
 turn = "white"
 
@@ -51,6 +52,9 @@ def piece_picked(chess_piece):
         for legal_move in refined_kings_legal_moves(chess_piece):
             legal_move_canvas_id = board.create_image(legal_move[0] * 96 + 2, legal_move[1] * 96 - 12, anchor='nw', image = legal_move_img)
             legal_move_widgets[legal_move_canvas_id] = legal_move
+        for castling_move in castling_moves(chess_piece):
+            castling_move_canvas_id = board.create_image(legal_move[0] * 96 + 2, legal_move[1] * 96 - 12, anchor='nw', image = legal_move_img)
+            castling_move_widgets[castling_move_canvas_id] = castling_move
     
 
 def move_chose(legal_move_canvas_id):
@@ -85,6 +89,7 @@ def clear_focus():
 board.bind("<Button-1>", button_clicked)
 
 # Refining the king's legal moves
+
 def is_safe(kings_position):
     global turn
     for collumn in range(8):
@@ -99,36 +104,81 @@ def refined_kings_legal_moves(king):
     for move in king.legal_move():
         if is_safe(move):
             refined_legal_moves.append(move)
+    for move in refined_legal_moves:
+        temp = squares[move[0]] [move[1]]
+        origin_king_pos = king.position
+        origin_king_first_move_stat = king.first_move
+        king.move(move)
+        if not is_safe(move):
+            refined_legal_moves.remove(move)
+        squares[move[0]] [move[1]] = temp
+        king.move(origin_king_pos)
+        king.first_move = origin_king_first_move_stat
     return refined_legal_moves
-                
+
+def is_check(king):
+    if is_safe(king.position):
+        king.status = "Safe"
+    else:
+        king.status = "Check"
+
+def castling_moves(king):
+    castling_moves = []
+    if king.first_move == True:
+        for i in (0,7):
+            if (king.pos == (4, king.position[1])) and (squares[i] [king.position[1]].type == king.type[:5] + "-rook"):
+                if squares[i] [king.position[1]].first_move == True:
+                    if i < 4:
+                        k = i
+                        for j in range(i + 1, 4):
+                            if squares[j] [king.position[1]] != False:
+                                k = j
+                                break
+                        if squares[k] [king.position[1]] != False:
+                            break
+                        castling_moves.append(2, king.position[1])
+                    else:
+                        for j in range(5, i):
+                            if squares[j] [king.position[1]] != False:
+                                k = j
+                                break
+                        if squares[k] [king.position[1]] != False:
+                            break
+                        castling_moves.append(6, king.position[1])
+    return castling_moves
+
+def castle(move, king):
+    king.move(move)
+    if move[0] < 4:
+        squares[0] [king.position[1]].move((move[0] + 1, move[1]))
+    else:
+        squares[0] [king.position[1]].move((move[0] - 1, move[1]))
 
 # Set up the default chess game
 
 def default_game():
-    squares[0] [0] = ChessPiece(board, main_window, squares, canvas_objects, 'black-rook', (0,0))
-    squares[1] [0] = ChessPiece(board, main_window, squares, canvas_objects, 'black-knight', (1,0))
-    squares[2] [0] = ChessPiece(board, main_window, squares, canvas_objects, 'black-bishop', (2,0))
-    squares[3] [0] = ChessPiece(board, main_window, squares, canvas_objects, 'black-queen', (3,0))
-    squares[4] [0] = ChessPiece(board, main_window, squares, canvas_objects, 'black-king', (4,0))
-    squares[5] [0] = ChessPiece(board, main_window, squares, canvas_objects, 'black-bishop', (5,0))
-    squares[6] [0] = ChessPiece(board, main_window, squares, canvas_objects, 'black-knight', (6,0))
-    squares[7] [0] = ChessPiece(board, main_window, squares, canvas_objects, 'black-rook', (7,0))
+    squares[0] [0] = ChessPiece(board, squares, canvas_objects, 'black-rook', (0,0))
+    squares[1] [0] = ChessPiece(board, squares, canvas_objects, 'black-knight', (1,0))
+    squares[2] [0] = ChessPiece(board, squares, canvas_objects, 'black-bishop', (2,0))
+    squares[3] [0] = ChessPiece(board, squares, canvas_objects, 'black-queen', (3,0))
+    squares[4] [0] = ChessPiece(board, squares, canvas_objects, 'black-king', (4,0))
+    squares[5] [0] = ChessPiece(board, squares, canvas_objects, 'black-bishop', (5,0))
+    squares[6] [0] = ChessPiece(board, squares, canvas_objects, 'black-knight', (6,0))
+    squares[7] [0] = ChessPiece(board, squares, canvas_objects, 'black-rook', (7,0))
     for i in range(8):
-        squares[i] [1] = ChessPiece(board, main_window, squares, canvas_objects, 'black-pawn', (i,1))
+        squares[i] [1] = ChessPiece(board, squares, canvas_objects, 'black-pawn', (i,1))
 
-    squares[0] [7] = ChessPiece(board, main_window, squares, canvas_objects, 'white-rook', (0,7))
-    squares[1] [7] = ChessPiece(board, main_window, squares, canvas_objects, 'white-knight', (1,7))
-    squares[2] [7] = ChessPiece(board, main_window, squares, canvas_objects, 'white-bishop', (2,7))
-    squares[3] [7] = ChessPiece(board, main_window, squares, canvas_objects, 'white-queen', (3,7))
-    squares[4] [7] = ChessPiece(board, main_window, squares, canvas_objects, 'white-king', (4,7))
-    squares[5] [7] = ChessPiece(board, main_window, squares, canvas_objects, 'white-bishop', (5,7))
-    squares[6] [7] = ChessPiece(board, main_window, squares, canvas_objects, 'white-knight', (6,7))
-    squares[7] [7] = ChessPiece(board, main_window, squares, canvas_objects, 'white-rook', (7,7))
+    squares[0] [7] = ChessPiece(board, squares, canvas_objects, 'white-rook', (0,7))
+    squares[1] [7] = ChessPiece(board, squares, canvas_objects, 'white-knight', (1,7))
+    squares[2] [7] = ChessPiece(board, squares, canvas_objects, 'white-bishop', (2,7))
+    squares[3] [7] = ChessPiece(board, squares, canvas_objects, 'white-queen', (3,7))
+    squares[4] [7] = ChessPiece(board, squares, canvas_objects, 'white-king', (4,7))
+    squares[5] [7] = ChessPiece(board, squares, canvas_objects, 'white-bishop', (5,7))
+    squares[6] [7] = ChessPiece(board, squares, canvas_objects, 'white-knight', (6,7))
+    squares[7] [7] = ChessPiece(board, squares, canvas_objects, 'white-rook', (7,7))
     for i in range(8):
-        squares[i] [6] = ChessPiece(board, main_window, squares, canvas_objects, 'white-pawn', (i,6))
+        squares[i] [6] = ChessPiece(board, squares, canvas_objects, 'white-pawn', (i,6))
 
 default_game()
 
-
 main_window.mainloop()
-
