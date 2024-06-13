@@ -35,10 +35,13 @@ focus = None
 turn = "white"
 
 def clear_legal_move_widgets():
-    global legal_move_widgets, board
+    global legal_move_widgets, castling_move_widgets, board
     for canvas_id in legal_move_widgets:
         board.delete(canvas_id)
     legal_move_widgets = {}
+    for canvas_id in castling_move_widgets:
+        board.delete(canvas_id)
+    castling_move_widgets = {}
 
 def piece_picked(chess_piece):
     global legal_move_widgets, focus, board
@@ -53,7 +56,7 @@ def piece_picked(chess_piece):
             legal_move_canvas_id = board.create_image(legal_move[0] * 96 + 2, legal_move[1] * 96 - 12, anchor='nw', image = legal_move_img)
             legal_move_widgets[legal_move_canvas_id] = legal_move
         for castling_move in castling_moves(chess_piece):
-            castling_move_canvas_id = board.create_image(legal_move[0] * 96 + 2, legal_move[1] * 96 - 12, anchor='nw', image = legal_move_img)
+            castling_move_canvas_id = board.create_image(castling_move[0] * 96 + 2, castling_move[1] * 96 - 12, anchor='nw', image = legal_move_img)
             castling_move_widgets[castling_move_canvas_id] = castling_move
     
 
@@ -76,8 +79,11 @@ def button_clicked(event):
     if canvas_ids != ():
         if (canvas_ids[-1] in canvas_objects) and (canvas_objects[canvas_ids[-1]].type[:5] == turn):
             piece_picked(canvas_objects[canvas_ids[-1]])
-        elif focus != None:
-            move_chose(canvas_ids[-1])
+        else:
+            if canvas_ids[-1] in castling_move_widgets:
+                castle(castling_move_widgets[canvas_ids[-1]], focus)
+            else:
+                move_chose(canvas_ids[-1])
     else:
         clear_focus()
 
@@ -126,33 +132,38 @@ def castling_moves(king):
     castling_moves = []
     if king.first_move == True:
         for i in (0,7):
-            if (king.pos == (4, king.position[1])) and (squares[i] [king.position[1]].type == king.type[:5] + "-rook"):
-                if squares[i] [king.position[1]].first_move == True:
+            if (squares[i] [king.position[1]].type == king.type[:5] + "-rook") and (squares[i] [king.position[1]].first_move == True):
+                if castling_helper(i, king):
                     if i < 4:
-                        k = i
-                        for j in range(i + 1, 4):
-                            if squares[j] [king.position[1]] != False:
-                                k = j
-                                break
-                        if squares[k] [king.position[1]] != False:
-                            break
-                        castling_moves.append(2, king.position[1])
+                        castling_moves.append((2, king.position[1]))
                     else:
-                        for j in range(5, i):
-                            if squares[j] [king.position[1]] != False:
-                                k = j
-                                break
-                        if squares[k] [king.position[1]] != False:
-                            break
-                        castling_moves.append(6, king.position[1])
+                        castling_moves.append((6, king.position[1]))
     return castling_moves
 
+def castling_helper(i, king):
+    if i < 4:
+        for j in range(i + 1, 4):
+            if squares[j] [king.position[1]] != False:
+                return False
+    else:
+        for j in range(5, i):
+            if squares[j] [king.position[1]] != False:
+                return False
+    return True
+
 def castle(move, king):
+    global squares, turn, focus
     king.move(move)
     if move[0] < 4:
         squares[0] [king.position[1]].move((move[0] + 1, move[1]))
     else:
-        squares[0] [king.position[1]].move((move[0] - 1, move[1]))
+        squares[7] [king.position[1]].move((move[0] - 1, move[1]))
+    focus = None
+    if turn == "white":
+        turn = "black"
+    else:
+        turn = "white"
+    clear_legal_move_widgets()
 
 # Set up the default chess game
 
